@@ -1,0 +1,22 @@
+{
+  "name": "arduinotest",
+  "version": "1.0.0",
+  "description": "arduinotest",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "get-json": "^1.0.0",
+    "hbs": "^4.0.1",
+    "johnny-five": "^1.0.0",
+    "keypress": "^0.2.1",
+    "nodemon": "^1.17.5",
+    "yargs": "^12.0.1"
+  }
+}
