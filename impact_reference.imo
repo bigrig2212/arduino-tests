@@ -1,0 +1,164 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_LSM303_U.h>
+#include <math.h>
+
+byte updateflag;
+
+Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
+Adafruit_LSM303_Mag_Unified mag = Adafruit_LSM303_Mag_Unified(12345);
+
+
+sensors_event_t event;
+sensors_event_t magEvent;
+
+int xaxis = 0, yaxis = 0, zaxis = 0;
+int deltx = 0, delty = 0, deltz = 0;
+int vibration = 0, magnitude = 0, sensitivity = 0, devibrate = 0;
+double angle;
+unsigned long time1; //Time when the program started. Used to run impact routine every 2mS.
+unsigned long time2;
+float impactDirection; //Direction car was traveling prior to impact.
+
+
+void setup()
+{
+  Wire.begin();
+  sensitivity=15;
+  devibrate=75;
+
+  Serial.begin(9600);
+
+  //Initialize component;
+  if(!accel.begin())
+  {
+
+    Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
+    while(1);
+  }
+  if(!mag.begin())
+  {
+  Serial.println("Ooops, no LSM303 detected ... Check your wiring!");
+  while(1);
+  }
+
+  time1 = micros();
+  //Serial.print("time1 = "); Serial.println(time1);
+}
+
+void loop()
+{
+  accel.getEvent(&event);
+  mag.getEvent(&magEvent);
+
+  if (micros() - time1 > 1999) Impact();  // call impact routine every 2mS
+
+  if(updateflag > 0)
+  {
+    updateflag=0;
+    Serial.print("Impact detected!!\tMagnitude:"); Serial.print(magnitude);
+    Serial.print("\t Angle:"); Serial.print(angle, 2);
+    Serial.print("\t Car Direction: "); Serial.print(impactDirection);
+    Serial.print(" ("); Serial.print(compassDirection(impactDirection)); Serial.println(")");
+    Serial.println();
+  }
+
+}
+
+
+void Impact()
+{
+
+  /*
+  //Calibration testing. Accelerometer is calibrated correctly x ~0 y ~0 z ~9.8
+  Serial.print("X: "); Serial.print(event.acceleration.x); Serial.print(" ");
+  Serial.print("Y: "); Serial.print(event.acceleration.y); Serial.print(" ");
+  Serial.print("Z: "); Serial.print(event.acceleration.z); Serial.print(" ");Serial.println("m/s^2 ");
+  */
+
+  time1 = micros(); // resets time value
+
+  int oldx = xaxis; // local variables store previous axis readings for comparison
+  int oldy = yaxis;
+  int oldz = zaxis;
+
+  //Serial.print("current time = "); Serial.print(micros()); Serial.print("\toldx = "); Serial.print(oldx); Serial.print("\toldy = "); Serial.print(oldy); Serial.print("\toldz = "); Serial.println(oldz);
+
+  vibration--; // loop counter prevents false triggering. Vibration resets if there is an impact. Don't detect new changes until that "time" has passed.
+  //Serial.print("Vibration = "); Serial.println(vibration);
+  if(vibration < 0) vibration = 0;
+  //Serial.println("Vibration Reset!");
+  //Serial.println("****************************");
+
+  xaxis = event.acceleration.x;
+  yaxis = event.acceleration.y;
+  zaxis = event.acceleration.z;
+
+  //Serial.print("current time = "); Serial.print(micros()); Serial.print("\txaxis = "); Serial.print(xaxis); Serial.print("\tyaxis = "); Serial.print(yaxis); Serial.print("\tzaxis = "); Serial.println(zaxis);
+  //Serial.println("****************************");
+
+  if(vibration > 0) return;
+
+  deltx = xaxis - oldx;
+  delty = yaxis - oldy;
+  deltz = zaxis - oldz;
+
+  magnitude = sqrt(sq(deltx) + sq(delty) + sq(deltz)); //Magnitude to calculate force of impact.
+
+  if (magnitude >= sensitivity) //impact detected
+  {
+
+    //Values that caused the impact
+    Serial.print("Impact Time = "); Serial.print(micros()); Serial.print("\t\tCar Direction = "); Serial.print(getHeading(magEvent)); Serial.print(" "); Serial.println(compassDirection(getHeading(magEvent)));
+    Serial.print("oldx = "); Serial.print(oldx); Serial.print("\toldy = "); Serial.print(oldy); Serial.print("\toldz = "); Serial.println(oldz);
+    Serial.print("xaxis = "); Serial.print(xaxis); Serial.print("\tyaxis = "); Serial.print(yaxis); Serial.print("\tzaxis = "); Serial.println(zaxis);
+    Serial.print("Mag = "); Serial.print(magnitude);
+    Serial.print("\tdeltx = "); Serial.print(deltx);
+    Serial.print("\tdelty = "); Serial.print(delty);
+    Serial.print("\tdeltz = "); Serial.println(deltz);
+
+
+    updateflag=1;
+    impactDirection = getHeading(magEvent);
+
+    //double X = xaxis - 512; // adjust xaxis reading to +/- 512
+    //double Y = yaxis - 512; // adjust yaxis reading to +/- 512
+
+    double X = acos((double) deltx / magnitude);
+    double Y = acos((double) delty / magnitude);
+
+    Serial.print("X = "); Serial.print(X); Serial.print("Y = "); Serial.println(Y);
+
+    Serial.println("****************************");
+
+    angle = (atan2(Y,X) * 180)/PI; // use atan2 to calculate angle and convert radians to degrees
+    angle += 180;
+
+    vibration = devibrate;                                      // reset anti-vibration counter
+    time2 = millis();
+  }
+  else
+  {
+    //if (magnitude > 15)
+      //Serial.println(magnitude);
+    magnitude=0;                                              // reset magnitude of impact to 0
+  }
+}
+
+float getHeading(sensors_event_t &event)
+{
+   float heading = (atan2(event.magnetic.y,event.magnetic.x) * 180) / PI;
+   if (heading < 0)
+      heading = 360 + heading;
+
+   return heading;
+
+}
+
+String compassDirection(float heading)
+{
+    int val = (int) ((heading / 22.5) + .5);
+    String arr [] = {"N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
+
+    return arr[(val % 16)];
+}
