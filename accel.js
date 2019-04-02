@@ -31,9 +31,10 @@ board.on("ready", function() {
 
 var updateflag = false;
 var deltx = 0, delty = 0, deltz = 0;
-var vibration = 0, magnitude = 0, sensitivity = 1, devibrate = 50;
+var vibration = 0, magnitude = 0, sensitivity = 0, devibrate = 50;
 var oldx, oldy, oldz = 0;
 
+//this doesn't really work, b/c just detects change motion - not stoppage of motion
 function checkImpact(xaxis, yaxis, zaxis, acceleration){
 
   vibration--; // loop counter prevents false triggering. Vibration resets if there is an impact. Don't detect new changes until that "time" has passed.
@@ -43,8 +44,8 @@ function checkImpact(xaxis, yaxis, zaxis, acceleration){
   delty = yaxis - oldy;
   deltz = zaxis - oldz;
 
-  //magnitude = Math.sqrt(Math.pow(deltx, 2) + Math.pow(delty, 2) + Math.pow(deltz, 2)); //Magnitude to calculate force of impact.
-  magnitude = Math.sqrt(Math.pow(deltx, 2)); //Magnitude to calculate force of impact.
+  magnitude = Math.sqrt(Math.pow(deltx, 2) + Math.pow(delty, 2) + Math.pow(deltz, 2)); //Magnitude to calculate force of impact.
+  //magnitude = Math.sqrt(Math.pow(deltx, 2)); //Magnitude to calculate force of impact.
   if (magnitude >= sensitivity) //impacts detected
   {
     console.log("Impact detected!!\tMagnitude:", magnitude);

@@ -1,5 +1,7 @@
-require('dotenv').config();
 const PORT = 3000
+
+var five = require("johnny-five");
+var board = new five.Board();
 
 const path = require('path');
 const publicPath = path.join(__dirname, '/public');
@@ -13,24 +15,8 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ parameterLimit: 50000, extended: true })); // extend param limit, so that all Qs can be exported
 
-// [START Firestore]
-const Firestore = require('@google-cloud/firestore');
-const db = new Firestore();
-const settings = {
-  projectId: 'slimeboggin',
-  keyFilename: 'slimeboggin-98e43e83aa20.json',
-  timestampsInSnapshots: true
-};
-db.settings(settings);
 const timestamp = new Date(); //settimestamp
 
-
-//ROUTES
-import slip from './routes/slip';
-app.use('/slip', slip);
-
-import store from './routes/store';
-app.use('/store', store)
 
 //HANDLEBARS AND PATHS
 const hbs = require('hbs');
@@ -58,9 +44,43 @@ app.use((req, res, next) => {
     next();
 });
 
+// [INDEX - show board]
+app.get('/', (req, res) => {
+  res.render('home.hbs', {
+    pageTitle: 'Home',
+    welcomeMsg: 'Hi there'
+  });
+});
 //----------------------
 
 
 server.listen(PORT, () => {
     console.log('Slime is on ',PORT)
+});
+
+
+board.on("ready", function() {
+  console.log('Starting up:')
+  var accelerometer = new five.Accelerometer({
+    controller: "ADXL335",
+    pins: ["A0", "A1", "A2"]
+  });
+
+  accelerometer.on("change", function() {
+    // console.log("accelerometer");
+    console.log("  x            : ", this.x);
+    // console.log("  y            : ", this.y);
+    // console.log("  z            : ", this.z);
+    // console.log("  pitch        : ", this.pitch);
+    // console.log("  roll         : ", this.roll);
+    // console.log("  acceleration : ", this.acceleration);
+    // console.log("  inclination  : ", this.inclination);
+    // console.log("  orientation  : ", this.orientation);
+    // displayCounter();
+    // if (counter % 3 === 0){
+    //   checkImpact(this.x,this.y,this.z,this.acceleration);
+    // }
+    // countloop();
+    //console.log("--------------------------------------");
+  });
 });
