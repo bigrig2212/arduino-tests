@@ -18,25 +18,35 @@ socket.on('accelVals', (vals) => {
 var bounds = {
   "xmax":0, "xmin":0,
   "ymax":0, "ymin":0,
-  "pmax":0, "pmin":0,
-  "rmax":0, "rmin":0,
-  "amax":0, "amin":0,
-  "imax":0, "imin":0,
-  "omax":0, "omin":0
+  "zmax":0, "zmin":0,
+  "pitchmax":0, "pitchmin":0,
+  "rollmax":0, "rollmin":0,
+  "accelerationmax":0, "accelerationmin":0,
+  "inclinationmax":0, "inclinationmin":0,
+  "orientationmax":0, "orientationmin":0
 }
 var cWidth = 500;
 var cHeight = 500;
+var outputbox;
 
 //[PRELOAD]
 function preload() {
 }
 //[SETUP]
+
 function setup() {
   createCanvas(cWidth,cHeight);
   $( "#increment" ).click(function() {
     console.log('clicked');
     socket.emit('increment');
   });
+
+  //move the output box into position
+  outputbox = document.getElementById('boundtext');
+  outputbox.style.position = "absolute";
+  outputbox.style.left = windowWidth-350+'px';
+  outputbox.style.height = windowHeight-20+'px';
+  outputbox.style.top = 0+'px';
 }
 //[DRAW]
 function draw() {
@@ -57,6 +67,7 @@ function draw() {
 function drawbounds(){
 
 }
+
 function setbounds(accelVals){
   if (accelVals.x > bounds.xmax){bounds.xmax = accelVals.x;}
   if (accelVals.x < bounds.xmin){bounds.xmin = accelVals.x;}
@@ -64,19 +75,37 @@ function setbounds(accelVals){
   if (accelVals.y > bounds.ymax){bounds.ymax = accelVals.y;}
   if (accelVals.y < bounds.ymin){bounds.ymin = accelVals.y;}
 
-  if (accelVals.p > bounds.pmax){bounds.pmax = accelVals.p;}
-  if (accelVals.p < bounds.pmin){bounds.pmin = accelVals.p;}
+  if (accelVals.z > bounds.zmax){bounds.zmax = accelVals.z;}
+  if (accelVals.z < bounds.zmin){bounds.zmin = accelVals.z;}
 
-  if (accelVals.r > bounds.rmax){bounds.rmax = accelVals.r;}
-  if (accelVals.r < bounds.rmin){bounds.rmin = accelVals.r;}
+  if (accelVals.pitch > bounds.pitchmax){bounds.pitchmax = accelVals.pitch;}
+  if (accelVals.pitch < bounds.pitchmin){bounds.pitchmin = accelVals.pitch;}
 
-  if (accelVals.a > bounds.amax){bounds.amax = accelVals.a;}
-  if (accelVals.a < bounds.amin){bounds.amin = accelVals.a;}
+  if (accelVals.roll > bounds.rollmax){bounds.rollmax = accelVals.roll;}
+  if (accelVals.roll < bounds.rollmin){bounds.rollmin = accelVals.roll;}
 
-  if (accelVals.i > bounds.imax){bounds.imax = accelVals.i;}
-  if (accelVals.i < bounds.imin){bounds.imin = accelVals.i;}
+  if (accelVals.acceleration > bounds.accelerationmax){bounds.accelerationmax = accelVals.acceleration;}
+  if (accelVals.acceleration < bounds.accelerationmin){bounds.accelerationmin = accelVals.acceleration;}
 
-  if (accelVals.o > bounds.omax){bounds.omax = accelVals.o;}
-  if (accelVals.o < bounds.omin){bounds.omin = accelVals.o;}
-  console.log(bounds)
+  if (accelVals.inclination > bounds.inclinationmax){bounds.inclinationmax = accelVals.inclination;}
+  if (accelVals.inclination < bounds.inclinationmin){bounds.inclinationmin = accelVals.inclination;}
+
+  if (accelVals.orientation > bounds.orientationmax){bounds.orientationmax = accelVals.orientation;}
+  if (accelVals.orientation < bounds.orientationmin){bounds.orientationmin = accelVals.orientation;}
+
+  var output = '';
+  output= "<br>------max & min readings-------<br>";
+  output += '<table>';
+  for (var property in bounds) {
+    output += "<tr><td>" + property + "</td><td>" + bounds[property] + "</td></tr>";
+  }
+  output += "</table>";
+  output += "<br>------live readings-------<br>";
+  output += '<table>';
+  for (var prop in accelVals) {
+    output += "<tr><td>" + prop + "</td><td>" + accelVals[prop] + "</td></tr>";
+  }
+  output += "</table>";
+
+  outputbox.innerHTML = output;
 }

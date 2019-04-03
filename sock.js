@@ -63,7 +63,7 @@ board.on("ready", function() {
   });
 
   accelerometer.on("change", function() {
-    emitAccelVals({"x":this.x, "y":this.y, "z":this.z, "p":this.pitch, "r":this.roll, "a":this.acceleration, "i":this.inclination, "o":this.orientation});
+    emitAccelVals({"x":this.x, "y":this.y, "z":this.z, "pitch":this.pitch, "roll":this.roll, "acceleration":this.acceleration, "inclination":this.inclination, "orientation":this.orientation});
     // console.log("accelerometer");
     //console.log("  x            : ", this.x);
     // console.log("  y            : ", this.y);

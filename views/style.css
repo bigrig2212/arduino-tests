@@ -9,8 +9,8 @@ p{
   font-size: 10pt;
 }
 
-#boundtext{
-  background-color: red;
+#clustertext{
+  background-color: white;
   position: absolute;
   width: 390px;
   opacity: 0.8;
