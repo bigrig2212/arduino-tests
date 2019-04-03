@@ -1,7 +1,6 @@
 const PORT = 3000
 
-var five = require("johnny-five");
-var board = new five.Board();
+const board = require('./board.js');
 
 const path = require('path');
 const publicPath = path.join(__dirname, '/public');
@@ -43,9 +42,9 @@ app.use((req, res, next) => {
     })
     next();
 });
-
 // [INDEX - show board]
 app.get('/', (req, res) => {
+  console.log(board)
   res.render('home.hbs', {
     pageTitle: 'Home',
     welcomeMsg: 'Hi there'
@@ -55,32 +54,5 @@ app.get('/', (req, res) => {
 
 
 server.listen(PORT, () => {
-    console.log('Slime is on ',PORT)
-});
-
-
-board.on("ready", function() {
-  console.log('Starting up:')
-  var accelerometer = new five.Accelerometer({
-    controller: "ADXL335",
-    pins: ["A0", "A1", "A2"]
-  });
-
-  accelerometer.on("change", function() {
-    // console.log("accelerometer");
-    console.log("  x            : ", this.x);
-    // console.log("  y            : ", this.y);
-    // console.log("  z            : ", this.z);
-    // console.log("  pitch        : ", this.pitch);
-    // console.log("  roll         : ", this.roll);
-    // console.log("  acceleration : ", this.acceleration);
-    // console.log("  inclination  : ", this.inclination);
-    // console.log("  orientation  : ", this.orientation);
-    // displayCounter();
-    // if (counter % 3 === 0){
-    //   checkImpact(this.x,this.y,this.z,this.acceleration);
-    // }
-    // countloop();
-    //console.log("--------------------------------------");
-  });
+    console.log('Arduino Controls is on ',PORT)
 });

@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "test",
-    "start": "nodemon server.js"
+    "start": "nodemon sock.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +17,7 @@
     "johnny-five": "^1.0.0",
     "keypress": "^0.2.1",
     "nodemon": "^1.17.5",
+    "socket.io": "^2.2.0",
     "yargs": "^12.0.1"
   }
 }
