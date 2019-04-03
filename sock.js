@@ -26,9 +26,11 @@ app.get('/', (req, res) => {
 });
 
 let count = 0;
+let welcomeMessage = "Hello sockets world";
 io.on('connection', (socket) => {
   console.log('new websocket connection');
   socket.emit('countUpdated', count);
+  socket.emit('welcome', welcomeMessage);
   socket.on('increment', () => {
       count++;
       //socket.emit('countUpdated', count); //emits to that specific connection

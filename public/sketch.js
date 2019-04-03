@@ -2,6 +2,10 @@ const socket = io();
 
 socket.on('countUpdated', (counter) => {
   console.log('count has been updated, browser', counter);
+});
+
+socket.on('welcome', (welcomeMsg) => {
+  console.log('Msg:', welcomeMsg);
 })
 
 
@@ -16,6 +20,7 @@ function setup() {
     console.log('clicked');
     socket.emit('increment');
   });
+
 }
 function draw() {
   background(51);
