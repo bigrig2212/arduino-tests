@@ -30,28 +30,31 @@ app.get('/', (req, res) => {
 
 // [SOCKET]
 let count = 0;
-var emitAccelVals;
+var emitAccelVals; //function var
 let welcomeMessage = "Hello sockets world";
 io.on('connection', (socket) => {
   console.log('new websocket connection');
   socket.emit('countUpdated', count);
   socket.emit('welcome', welcomeMessage);
+  //demo to transmit a val from one browser to all browsers connected
   socket.on('increment', () => {
       count++;
       //socket.emit('countUpdated', count); //emits to that specific connection
       io.emit('countUpdated', count); //emits to all connections
   });
-  //respond to a request from browser
+  //respond to a request from browser (on request_x, runs function )
   socket.on('request_x', () => {
       socket.emit('request_x', xval);
   });
-  //transmit vals to browser directly
+
+  //function to transmit vals to browser directly
   emitAccelVals = function(vals) {
     socket.emit('accelVals', vals);
   }
+
 });
 
-// [SOCKET]
+// [ACCELEROMETER]
 board.on("ready", function() {
   console.log('Starting up:')
   var accelerometer = new five.Accelerometer({
@@ -60,7 +63,7 @@ board.on("ready", function() {
   });
 
   accelerometer.on("change", function() {
-    emitAccelVals({"x":this.x, "y":this.y, "z":this.z});
+    emitAccelVals({"x":this.x, "y":this.y, "z":this.z, "p":this.pitch, "r":this.roll, "a":this.acceleration, "i":this.inclination, "o":this.orientation});
     // console.log("accelerometer");
     //console.log("  x            : ", this.x);
     // console.log("  y            : ", this.y);
