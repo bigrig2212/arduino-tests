@@ -4,6 +4,9 @@ const path = require('path');
 const express = require('express');
 const socketio = require('socket.io');
 
+var five = require("johnny-five");
+var board = new five.Board();
+
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
@@ -25,7 +28,9 @@ app.get('/', (req, res) => {
   });
 });
 
+// [SOCKET]
 let count = 0;
+var emitAccelVals;
 let welcomeMessage = "Hello sockets world";
 io.on('connection', (socket) => {
   console.log('new websocket connection');
@@ -35,8 +40,51 @@ io.on('connection', (socket) => {
       count++;
       //socket.emit('countUpdated', count); //emits to that specific connection
       io.emit('countUpdated', count); //emits to all connections
-  })
-})
+  });
+  //respond to a request from browser
+  socket.on('request_x', () => {
+      socket.emit('request_x', xval);
+  });
+  //transmit vals to browser directly
+  emitAccelVals = function(vals) {
+    socket.emit('accelVals', vals);
+  }
+});
+
+// [SOCKET]
+board.on("ready", function() {
+  console.log('Starting up:')
+  var accelerometer = new five.Accelerometer({
+    controller: "ADXL335",
+    pins: ["A0", "A1", "A2"]
+  });
+
+  accelerometer.on("change", function() {
+    emitAccelVals({"x":this.x, "y":this.y, "z":this.z});
+    // console.log("accelerometer");
+    //console.log("  x            : ", this.x);
+    // console.log("  y            : ", this.y);
+    // console.log("  z            : ", this.z);
+    // console.log("  pitch        : ", this.pitch);
+    // console.log("  roll         : ", this.roll);
+    // console.log("  acceleration : ", this.acceleration);
+    // console.log("  inclination  : ", this.inclination);
+    // console.log("  orientation  : ", this.orientation);
+    // displayCounter();
+    // if (counter % 3 === 0){
+    //   checkImpact(this.x,this.y,this.z,this.acceleration);
+    // }
+    // countloop();
+    //console.log("--------------------------------------");
+
+  });
+
+});
+
+
+
+
+
 
 server.listen(PORT, () => {
     console.log('Arduino Controls is on ',PORT)

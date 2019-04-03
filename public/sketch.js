@@ -8,6 +8,10 @@ socket.on('welcome', (welcomeMsg) => {
   console.log('Msg:', welcomeMsg);
 })
 
+//receive Accelerometer Values from server
+socket.on('accelVals', (vals) => {
+  console.log('accelVals:', vals);
+})
 
 
 function preload() {
@@ -24,5 +28,5 @@ function setup() {
 }
 function draw() {
   background(51);
-  ellipse(mouseX, mouseY, 60, 60)
+  ellipse(mouseX, mouseY, 60, 60);
 }
