@@ -85,7 +85,7 @@ function init() {
 
 	scene = new THREE.Scene();
 
-	geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+	geometry = new THREE.BoxGeometry( 0.1, 0.5, 0.5 );
 	material = new THREE.MeshNormalMaterial();
 
 	mesh = new THREE.Mesh( geometry, material );
@@ -112,12 +112,12 @@ function animate() {
 
 	requestAnimationFrame( animate );
 
-	thisy = 0.02;
+	thisy = 5.05;
 	thisx = 0.01;
 	thisz = 0.01;
 	if (accelVals.y !== undefined){thisy = accelVals.y;}
 	if (accelVals.x !== undefined){thisx = accelVals.x;}
-	if (accelVals.z !== undefined){thisz = accelVals.z;}
+	//if (accelVals.z !== undefined){thisz = accelVals.z;}
 	mesh.rotation.x = thisx;
 	mesh.rotation.y = thisy;
 	mesh.rotation.z = thisz;
