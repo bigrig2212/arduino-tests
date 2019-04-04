@@ -28,6 +28,13 @@ app.get('/', (req, res) => {
   });
 });
 
+// [THREE.js]
+app.get('/three', (req, res) => {
+  res.render('three.hbs', {
+    pageTitle: 'Three'
+  });
+});
+
 // [SOCKET]
 let count = 0;
 var emitAccelVals; //function var
