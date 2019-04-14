@@ -58,27 +58,44 @@ function draw() {
     var yloc = map(accelVals.y, bounds.ymin, bounds.ymax, 0, cHeight);
     ellipse(xloc, yloc, 15, 15);
     setbounds(accelVals);
-    evaluateHit(accelVals);
+    //evaluateHit(accelVals);
+    trackHistory(accelVals);
+    graphVals();
 
-    if (allpreviousAccelVals != undefined){
-      //https://www.youtube.com/watch?v=jEwAMgcCgOA
-      stroke(255);
-      noFill();
-      beginShape();
-      for (var i = 0; i<allpreviousAccelVals.length; i++){
-        var y = map(allpreviousAccelVals[i]*.1, 0, 1, height/1.3, 0)
-        vertex(i,y)
-      }
-      endShape();
-      if (allpreviousAccelVals.length > width-20){
-        allpreviousAccelVals.splice(0,1);
-      }
-    }
   } else {
     console.log('No vals yet from accelerometer');
   }
 }
 
+function graphVals(){
+  //https://www.youtube.com/watch?v=jEwAMgcCgOA
+  //Acceleration
+  stroke(255);
+  noFill();
+  beginShape();
+  for (var i = 0; i<allpreviousAccelVals.length; i++){
+    var y = map(allpreviousAccelVals[i]*.1, 0, 1, height/1.3, 0)
+    vertex(i,y)
+  }
+  endShape();
+  if (allpreviousAccelVals.length > width-20){
+    allpreviousAccelVals.splice(0,1);
+  }
+  //X val
+  push();
+  stroke(100);
+  noFill();
+  beginShape();
+  for (var i = 0; i<allpreviousXVals.length; i++){
+    var y = map(allpreviousXVals[i]*.1, 0, 1, height/1.3, 0)
+    vertex(i,y)
+  }
+  endShape();
+  if (allpreviousXVals.length > width-20){
+    allpreviousXVals.splice(0,1);
+  }
+  pop();
+}
 //[EVALUATE HIT]
 /*
 We're looking for a sudden stop in acceleration, primarily in x-direction
@@ -87,6 +104,13 @@ If there are 10 values in the array, take the last off
 If there is a sudden deceleration between values, mark it as a hit
 */
 var allpreviousAccelVals = [];
+var allpreviousXVals = [];
+function trackHistory(accelVals){
+  allpreviousAccelVals.push(accelVals.acceleration);
+  allpreviousXVals.push(accelVals.x);
+}
+
+
 var previousAccelVals = [];
 var previousXVals = [];
 function evaluateHit(accelVals){
@@ -105,7 +129,7 @@ function evaluateHit(accelVals){
   }
   //add most recent val to array and take off last val
   previousAccelVals.unshift(accelVals.acceleration);
-  allpreviousAccelVals.push(accelVals.acceleration);
+
   if (previousAccelVals.length > 15){previousAccelVals.pop()}
 }
 
