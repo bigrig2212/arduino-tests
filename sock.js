@@ -23,9 +23,10 @@ app.set('view engine', 'hbs');
 app.use(express.static(publicPath));
 
 // [INDEX]
-app.get('/', (req, res) => {
-  res.render('home.hbs', {
-    pageTitle: 'Home'
+//DOT ON SCREEN
+app.get('/dot', (req, res) => {
+  res.render('dot.hbs', {
+    pageTitle: 'Dot'
   });
 });
 
@@ -94,7 +95,6 @@ board.on("ready", function() {
     // }
     // countloop();
     //console.log("--------------------------------------");
-
   });
 
 });

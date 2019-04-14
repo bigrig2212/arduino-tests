@@ -58,15 +58,46 @@ function draw() {
     var yloc = map(accelVals.y, bounds.ymin, bounds.ymax, 0, cHeight);
     ellipse(xloc, yloc, 15, 15);
     setbounds(accelVals);
-    drawbounds();
+    evaluateHit(accelVals);
   } else {
     console.log('No vals yet from accelerometer');
   }
 }
-//[BOUNDS]
-function drawbounds(){
 
+//[EVALUATE HIT]
+/*
+We're looking for a sudden stop in acceleration, primarily in x-direction
+Add newest accel val to beginning of array
+If there are 10 values in the array, take the last off
+If there is a sudden deceleration between values, mark it as a hit
+*/
+var previousAccelVals = [];
+var previousXVals = [];
+function evaluateHit(accelVals){
+  var currentAccelVal = Math.floor(accelVals.acceleration);
+  var lastAccelVal = Math.floor(previousAccelVals[previousAccelVals.length-1]);
+  var diffBetweenCurAndLastAccelVal = currentAccelVal - lastAccelVal;
+
+  if (diffBetweenCurAndLastAccelVal < 0) {
+    //console.log('curval: ', currentAccelVal, 'lastval: ', lastAccelVal, 'diff: ', diffBetweenCurAndLastAccelVal);
+
+    var sampleArray = previousAccelVals;
+    sampleArray = sampleArray.map(function(each_element){
+      return Number(each_element.toFixed(0));
+    });
+    console.log(sampleArray)
+  }
+  //add most recent val to array and take off last val
+  previousAccelVals.unshift(accelVals.acceleration);
+  if (previousAccelVals.length > 15){previousAccelVals.pop()}
 }
+
+//Array math functions
+//from: https://codeburst.io/javascript-arrays-finding-the-minimum-maximum-sum-average-values-f02f1b0ce332
+const arrMax = arr => Math.max(...arr);
+const arrMin = arr => Math.min(...arr);
+const arrSum = arr => arr.reduce((a,b) => a + b, 0)
+const arrAvg = arr => arr.reduce((a,b) => a + b, 0) / arr.length
 
 function setbounds(accelVals){
   if (accelVals.x > bounds.xmax){bounds.xmax = accelVals.x;}
