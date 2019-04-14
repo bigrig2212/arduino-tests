@@ -3,6 +3,7 @@ const http = require('http');
 const path = require('path');
 const express = require('express');
 const socketio = require('socket.io');
+var THREE = require('three');
 
 var five = require("johnny-five");
 var board = new five.Board();
@@ -28,10 +29,17 @@ app.get('/', (req, res) => {
   });
 });
 
-// [THREE.js]
-app.get('/three', (req, res) => {
-  res.render('three.hbs', {
+// [CUBE]
+app.get('/cube', (req, res) => {
+  res.render('cube.hbs', {
     pageTitle: 'Three'
+  });
+});
+
+// [GLOVE]
+app.get('/glove', (req, res) => {
+  res.render('glove.hbs', {
+    pageTitle: 'Glove'
   });
 });
 

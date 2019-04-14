@@ -76,6 +76,7 @@ function setbounds(accelVals){
 //[THREE]
 var camera, scene, renderer;
 var geometry, material, mesh;
+// var loader = new THREE.GLTFLoader();
 init();
 animate();
 
@@ -101,17 +102,38 @@ $( document ).ready(function() {
 	//move the output box into position
 	 outputbox = document.getElementById('boundtext');
 	 outputbox.style.position = "absolute";
-	 outputbox.style.left = '10px';
-	 outputbox.style.height = '600px';
+	 outputbox.style.left = '60px';
+	 outputbox.style.height = '400px';
 	 outputbox.style.width = '200px';
-	 outputbox.style.top = '0px';
+	 outputbox.style.top = '50px';
 	 showupdate = true;
+
+    // // Load a glTF resource
+    //   loader.load(
+    //   	// resource URL
+    //   	'/models/Duck/glTF/Duck.gltf',
+    //   	// called when the resource is loaded
+    //   	function ( gltf ) {
+    //   		scene.add( gltf.scene );
+    //   		gltf.animations; // Array<THREE.AnimationClip>
+    //   		gltf.scene; // THREE.Scene
+    //   		gltf.scenes; // Array<THREE.Scene>
+    //   		gltf.cameras; // Array<THREE.Camera>
+    //   		gltf.asset; // Object
+    //   	},
+    //   	// called while loading is progressing
+    //   	function ( xhr ) {
+    //   		console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+    //   	},
+    //   	// called when loading has errors
+    //   	function ( error ) {
+    //   		console.log( 'An error happened' );
+    //   	}
+    //   );
 });
 
 function animate() {
-
 	requestAnimationFrame( animate );
-
 	thisy = 5.05;
 	thisx = 0.01;
 	thisz = 0.01;
