@@ -22,6 +22,7 @@ var bounds = {
   "pitchmax":0, "pitchmin":0,
   "rollmax":0, "rollmin":0,
   "accelerationmax":0, "accelerationmin":0,
+  "newaccelmax":false,
   "inclinationmax":0, "inclinationmin":0,
   "orientationmax":0, "orientationmin":0
 }
@@ -67,20 +68,34 @@ function draw() {
   }
 }
 
+var heightDivisor = 1.3; //for line placement on graph
+var accelMaxReducer = .1; //for turning accel vals into a floating point val less than 1
 function graphVals(){
   //https://www.youtube.com/watch?v=jEwAMgcCgOA
+
   //Acceleration
   stroke(255);
   noFill();
   beginShape();
   for (var i = 0; i<allpreviousAccelVals.length; i++){
-    var y = map(allpreviousAccelVals[i]*.1, 0, 1, height/1.3, 0)
-    vertex(i,y)
+    var y = map(allpreviousAccelVals[i]*accelMaxReducer, 0, 1, height/heightDivisor, 0);
+    vertex(i,y);
   }
   endShape();
   if (allpreviousAccelVals.length > width-20){
     allpreviousAccelVals.splice(0,1);
   }
+
+  //accelleration MAX indicator
+  push();
+  fill(255, 0, 0);
+  var y = map(bounds.accelerationmax*accelMaxReducer, 0, 1, height/heightDivisor, 0);
+  ellipse(width-10,y,10,10);
+  pop();
+  if (bounds.newaccelmax){
+    bounds.newaccelmax = false;
+  }
+
   //X val
   push();
   stroke(100);
@@ -156,7 +171,13 @@ function setbounds(accelVals){
   if (accelVals.roll > bounds.rollmax){bounds.rollmax = accelVals.roll;}
   if (accelVals.roll < bounds.rollmin){bounds.rollmin = accelVals.roll;}
 
-  if (accelVals.acceleration > bounds.accelerationmax){bounds.accelerationmax = accelVals.acceleration;}
+  if (accelVals.acceleration > bounds.accelerationmax){
+    bounds.accelerationmax = accelVals.acceleration;
+    bounds.newaccelmax = true;
+  } else {
+    bounds.newaccelmax = false;
+  }
+
   if (accelVals.acceleration < bounds.accelerationmin){bounds.accelerationmin = accelVals.acceleration;}
 
   if (accelVals.inclination > bounds.inclinationmax){bounds.inclinationmax = accelVals.inclination;}
