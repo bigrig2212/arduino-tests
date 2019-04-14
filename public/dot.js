@@ -59,6 +59,21 @@ function draw() {
     ellipse(xloc, yloc, 15, 15);
     setbounds(accelVals);
     evaluateHit(accelVals);
+
+    if (allpreviousAccelVals != undefined){
+      //https://www.youtube.com/watch?v=jEwAMgcCgOA
+      stroke(255);
+      noFill();
+      beginShape();
+      for (var i = 0; i<allpreviousAccelVals.length; i++){
+        var y = map(allpreviousAccelVals[i]*.1, 0, 1, height/1.3, 0)
+        vertex(i,y)
+      }
+      endShape();
+      if (allpreviousAccelVals.length > width-20){
+        allpreviousAccelVals.splice(0,1);
+      }
+    }
   } else {
     console.log('No vals yet from accelerometer');
   }
@@ -71,6 +86,7 @@ Add newest accel val to beginning of array
 If there are 10 values in the array, take the last off
 If there is a sudden deceleration between values, mark it as a hit
 */
+var allpreviousAccelVals = [];
 var previousAccelVals = [];
 var previousXVals = [];
 function evaluateHit(accelVals){
@@ -89,6 +105,7 @@ function evaluateHit(accelVals){
   }
   //add most recent val to array and take off last val
   previousAccelVals.unshift(accelVals.acceleration);
+  allpreviousAccelVals.push(accelVals.acceleration);
   if (previousAccelVals.length > 15){previousAccelVals.pop()}
 }
 
