@@ -41,7 +41,8 @@ var hitlevels = {
   "currentlevel_framecount":0,
   "framecount_at_last_report":0,
   "lookback":25,
-  "lastlevel":null
+  "lastlevel":0,
+  "lastlevel_c":"no level"
 }
 var hitc = {
   "hitcount":0
@@ -152,6 +153,7 @@ function graphVals(){
   //console.log('level is:', level);
   push();
 
+  //MAIN MESSAGE
   textFont("Patua One");
   fill(255, 255, 255);
   textSize(32);
@@ -164,10 +166,12 @@ function graphVals(){
   }
 
   //console.log(arrMax(dup_array))
-  //Hit counter
+  //ACTIVITY POINTS
   if (hitlevels.currentlevel >= 3){
-    hitc.hitcount ++;
+    var activityboost = 3 * hitlevels.currentlevel;
+    hitc.hitcount += activityboost;
     //console.log(hitc.hitcount)
+    hitlevels.lastlevel_c = hitlevels.currentlevel_c;
   }
   textAlign(LEFT);
   textFont("Arial");
@@ -203,16 +207,18 @@ function getLevel(peakScore){
     if (hitlevels.lastlevel != hitlevels.currentlevel){
       console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
       hitlevels.lastlevel = hitlevels.currentlevel;
+      //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
     }
 
   }
 
+  //LAST LEVEL
   push();
   textFont("Arial");
   fill(255, 255, 255);
   textAlign(LEFT);
   textSize(18);
-  text('level achieved: '+hitlevels[copy], 10, 40);
+  text('level achieved: '+hitlevels.lastlevel_c, 10, 40);
   pop();
   return (hitlevels.currentlevel_c)
 }
