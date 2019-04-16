@@ -27,6 +27,7 @@ var bounds = {
   "orientationmax":0, "orientationmin":0
 }
 var hitlevels = {
+  "0":0, "0_c":"nothing doing",
   "1":1.8, "1_c":"little tiny tap",
   "2":3.53, "2_c":"soft hit",
   "3":4.05, "3_c":"good hit",
@@ -39,7 +40,7 @@ var hitlevels = {
   "currentlevel_c":null,
   "currentlevel_framecount":0,
   "framecount_at_last_report":0,
-  "framecountdelay":15,
+  "lookback":25,
   "lastlevel":null
 }
 
@@ -101,7 +102,7 @@ function graphVals(){
   }
   endShape();
   if (allpreviousAccelVals.length > cWidth-20){
-    allpreviousAccelVals.splice(0,1);
+    allpreviousAccelVals.splice(0,1); //note that allpreviousAccelVals will be same length as screen width
   }
 
   //accelleration MAX indicator
@@ -129,35 +130,45 @@ function graphVals(){
   }
   pop();
 
+  //LEVELS
+  //look back over previous "lookback" number of readings
+  //report the peak in that lookback period
+  var dup_array=[];
+  var len = allpreviousAccelVals.length-1;
+  for(var i = 0; i < hitlevels.lookback; i++){
+    if (allpreviousAccelVals[len-i] !== undefined){
+      dup_array[i] = allpreviousAccelVals[len-i]; //last lookback readings are now in here
+    }
+  }
+  var peakScore = arrMax(dup_array);
+  var level = getLevel(peakScore); //gets the level for the peak score over the past N readings
+  console.log('level is:', level)
+  //console.log(arrMax(dup_array))
+} //end of graphVals
+
 /*
 "currentlevel_framecount":0,
 "framecount_at_last_report":0,
-"framecountdelay":20,
+"lookback":20,
+allpreviousAccelVals
 */
-  //LEVELS
-  var tempnewlevel;
-  for (var i = 1; i<=hitlevels.total; i++){
-    if ((accelVals.acceleration >= hitlevels[i]) && (accelVals.acceleration <= hitlevels[i+1])){
+function getLevel(peakScore){
+  for (var i = 0; i<=hitlevels.total; i++){
+    if ((peakScore >= hitlevels[i]) && (peakScore <= hitlevels[i+1])){
         var copy=i+"_c";
         hitlevels.currentlevel = i;
         hitlevels.currentlevel_c = hitlevels[copy];
         hitlevels.currentlevel_framecount = frameCount;
         //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
     }
-    //delay in reporting level
-    //THIS DOESNT WOOK
-    if (hitlevels.currentlevel_framecount-hitlevels.framecount_at_last_report > hitlevels.framecountdelay){
-      console.log("report it",frameCount, accelVals.acceleration, hitlevels[copy]);
-      hitlevels.framecount_at_last_report = hitlevels.currentlevel_framecount;
-    }
-
-    //level has changed
-    if (hitlevels.lastlevel != hitlevels.currentlevel){
-      console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
-      hitlevels.lastlevel = hitlevels.currentlevel;
-    }
+    // //level has changed
+    // if (hitlevels.lastlevel != hitlevels.currentlevel){
+    //   console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
+    //   hitlevels.lastlevel = hitlevels.currentlevel;
+    // }
   }
-} //end of graphVals
+  return (hitlevels.currentlevel_c)
+}
 
 //[EVALUATE HIT]
 /*
@@ -257,3 +268,7 @@ function windowResized() {
   setuproutine()
   resizeCanvas(windowWidth, windowHeight);
 }
+
+Array.prototype.clone = function() {
+	return this.slice(0);
+};
