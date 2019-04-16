@@ -26,8 +26,26 @@ var bounds = {
   "inclinationmax":0, "inclinationmin":0,
   "orientationmax":0, "orientationmin":0
 }
+var hitlevels = {
+  "1":1.8, "1_c":"little tiny tap",
+  "2":3.53, "2_c":"soft hit",
+  "3":4.05, "3_c":"good hit",
+  "4":6.9, "4_c":"hard hit!!",
+  "5":7.5, "5_c":"MASSIVE hit!!!!!!",
+  "6":8.5, "6_c":"NUUUUUUUCLEAR!!!!!!",
+  "7":9.0, "7_c":"PLUTON EXPLOSION BOMB!!!!!!",
+  "total":7,
+  "currentlevel":null,
+  "currentlevel_c":null,
+  "currentlevel_framecount":0,
+  "framecount_at_last_report":0,
+  "framecountdelay":15,
+  "lastlevel":null
+}
+
 var cWidth = 500;
 var cHeight = 500;
+var readoutboxLoc = 350;
 var outputbox;
 
 //[PRELOAD]
@@ -36,16 +54,16 @@ function preload() {
 //[SETUP]
 
 function setup() {
-  createCanvas(cWidth,cHeight);
-  $( "#increment" ).click(function() {
-    console.log('clicked');
-    socket.emit('increment');
-  });
-
+  cWidth = windowWidth-readoutboxLoc;
+  cHeight = windowHeight;
+  createCanvas(cWidth,windowHeight);
+  setuproutine();
+}
+function setuproutine(){
   //move the output box into position
   outputbox = document.getElementById('boundtext');
   outputbox.style.position = "absolute";
-  outputbox.style.left = windowWidth-350+'px';
+  outputbox.style.left = windowWidth-readoutboxLoc+'px';
   outputbox.style.height = windowHeight-20+'px';
   outputbox.style.top = 0+'px';
 }
@@ -82,7 +100,7 @@ function graphVals(){
     vertex(i,y);
   }
   endShape();
-  if (allpreviousAccelVals.length > width-20){
+  if (allpreviousAccelVals.length > cWidth-20){
     allpreviousAccelVals.splice(0,1);
   }
 
@@ -90,7 +108,7 @@ function graphVals(){
   push();
   fill(255, 0, 0);
   var y = map(bounds.accelerationmax*accelMaxReducer, 0, 1, height/heightDivisor, 0);
-  ellipse(width-10,y,10,10);
+  ellipse(cWidth-20,y,15,15);
   pop();
   if (bounds.newaccelmax){
     bounds.newaccelmax = false;
@@ -106,11 +124,41 @@ function graphVals(){
     vertex(i,y)
   }
   endShape();
-  if (allpreviousXVals.length > width-20){
+  if (allpreviousXVals.length > cWidth-20){
     allpreviousXVals.splice(0,1);
   }
   pop();
-}
+
+/*
+"currentlevel_framecount":0,
+"framecount_at_last_report":0,
+"framecountdelay":20,
+*/
+  //LEVELS
+  var tempnewlevel;
+  for (var i = 1; i<=hitlevels.total; i++){
+    if ((accelVals.acceleration >= hitlevels[i]) && (accelVals.acceleration <= hitlevels[i+1])){
+        var copy=i+"_c";
+        hitlevels.currentlevel = i;
+        hitlevels.currentlevel_c = hitlevels[copy];
+        hitlevels.currentlevel_framecount = frameCount;
+        //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
+    }
+    //delay in reporting level
+    //THIS DOESNT WOOK
+    if (hitlevels.currentlevel_framecount-hitlevels.framecount_at_last_report > hitlevels.framecountdelay){
+      console.log("report it",frameCount, accelVals.acceleration, hitlevels[copy]);
+      hitlevels.framecount_at_last_report = hitlevels.currentlevel_framecount;
+    }
+
+    //level has changed
+    if (hitlevels.lastlevel != hitlevels.currentlevel){
+      console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
+      hitlevels.lastlevel = hitlevels.currentlevel;
+    }
+  }
+} //end of graphVals
+
 //[EVALUATE HIT]
 /*
 We're looking for a sudden stop in acceleration, primarily in x-direction
@@ -201,4 +249,11 @@ function setbounds(accelVals){
   output += "</table>";
 
   outputbox.innerHTML = output;
+}
+
+function windowResized() {
+  cWidth = windowWidth-readoutboxLoc;
+  cHeight = windowHeight;
+  setuproutine()
+  resizeCanvas(windowWidth, windowHeight);
 }
