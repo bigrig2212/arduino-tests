@@ -43,6 +43,9 @@ var hitlevels = {
   "lookback":25,
   "lastlevel":null
 }
+var hitc = {
+  "hitcount":0
+}
 
 var cWidth = 500;
 var cHeight = 500;
@@ -67,6 +70,9 @@ function setuproutine(){
   outputbox.style.left = windowWidth-readoutboxLoc+'px';
   outputbox.style.height = windowHeight-20+'px';
   outputbox.style.top = 0+'px';
+
+  //fonts
+
 }
 //[DRAW]
 function draw() {
@@ -142,17 +148,42 @@ function graphVals(){
   }
   var peakScore = arrMax(dup_array);
   var level = getLevel(peakScore); //gets the level for the peak score over the past N readings
+
   //console.log('level is:', level);
   push();
+
+  textFont("Patua One");
+  fill(255, 255, 255);
   textSize(32);
   textAlign(CENTER)
-  fill(255, 255, 255);
-  textFont("Patua One");
   text(level, cWidth/2, cHeight/4);
-  pop();
+  if (hitlevels.currentlevel != 0){
+    textSize(16);
+    var scoreFormatted = peakScore.toFixed(3) * 1000;
+    text(scoreFormatted, cWidth/2, cHeight/4+20);
+  }
+
   //console.log(arrMax(dup_array))
+  //Hit counter
+  if (hitlevels.currentlevel >= 3){
+    hitc.hitcount ++;
+    //console.log(hitc.hitcount)
+  }
+  textAlign(LEFT);
+  textFont("Arial");
+  textSize(18);
+  text('activity points:'+hitc.hitcount, 10, 18);
+  pop();
 } //end of graphVals
 
+//doesnt work b/c is currentlevel_framecount is always same
+function enoughDelay(){
+  var framediff = frameCount - hitlevels.currentlevel_framecount;
+  console.log(frameCount, hitlevels.currentlevel_framecount, framediff);
+  if (framediff > 50){
+    return (true);
+  }
+}
 /*
 "currentlevel_framecount":0,
 "framecount_at_last_report":0,
@@ -168,12 +199,21 @@ function getLevel(peakScore){
         hitlevels.currentlevel_framecount = frameCount;
         //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
     }
-    // //level has changed
-    // if (hitlevels.lastlevel != hitlevels.currentlevel){
-    //   console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
-    //   hitlevels.lastlevel = hitlevels.currentlevel;
-    // }
+    //level has changed
+    if (hitlevels.lastlevel != hitlevels.currentlevel){
+      console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
+      hitlevels.lastlevel = hitlevels.currentlevel;
+    }
+
   }
+
+  push();
+  textFont("Arial");
+  fill(255, 255, 255);
+  textAlign(LEFT);
+  textSize(18);
+  text('level achieved: '+hitlevels[copy], 10, 40);
+  pop();
   return (hitlevels.currentlevel_c)
 }
 
