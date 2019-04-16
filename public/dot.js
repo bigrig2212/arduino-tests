@@ -45,7 +45,9 @@ var hitlevels = {
   "lastlevel_c":"no level"
 }
 var hitc = {
-  "hitcount":0
+  "hitcount":0,
+  "normal_routine":20000,
+  "mega_activity":100000
 }
 
 var cWidth = 500;
@@ -94,14 +96,24 @@ function draw() {
   }
 }
 
+//GRAPH VALS
 var heightDivisor = 1.3; //for line placement on graph
 var accelMaxReducer = .1; //for turning accel vals into a floating point val less than 1
 function graphVals(){
   //https://www.youtube.com/watch?v=jEwAMgcCgOA
 
-  //Acceleration
   stroke(255);
   noFill();
+
+  //progress bar
+  rect(30, 50, cWidth-50, 40);
+  push();
+  fill(200);
+  var rectwidth = map(hitc.hitcount, 0, hitc.normal_routine, 0, cWidth-50);
+  rect(30, 55, rectwidth, 35);
+  pop();
+
+  //Acceleration
   beginShape();
   for (var i = 0; i<allpreviousAccelVals.length; i++){
     var y = map(allpreviousAccelVals[i]*accelMaxReducer, 0, 1, height/heightDivisor, 0);
