@@ -27,7 +27,7 @@ var bounds = {
   "orientationmax":0, "orientationmin":0
 }
 var hitlevels = {
-  "0":0, "0_c":"nothing doing",
+  "0":0, "0_c":"keep it coming",
   "1":1.8, "1_c":"little tiny tap",
   "2":3.53, "2_c":"soft hit",
   "3":4.05, "3_c":"good hit",
@@ -142,7 +142,14 @@ function graphVals(){
   }
   var peakScore = arrMax(dup_array);
   var level = getLevel(peakScore); //gets the level for the peak score over the past N readings
-  console.log('level is:', level)
+  //console.log('level is:', level);
+  push();
+  textSize(32);
+  textAlign(CENTER)
+  fill(255, 255, 255);
+  textFont("Patua One");
+  text(level, cWidth/2, cHeight/4);
+  pop();
   //console.log(arrMax(dup_array))
 } //end of graphVals
 
