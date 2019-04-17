@@ -14,8 +14,9 @@ socket.on('accelVals', (vals) => {
 })
 
 
-//[GLOBALS]
-var bounds = {
+//[SET AND INITIALIZE GLOBALS]
+//sensorbounds: tracking min/max sensor values
+var sensorbounds = {
   "xmax":0, "xmin":0,
   "ymax":0, "ymin":0,
   "zmax":0, "zmin":0,
@@ -36,30 +37,30 @@ var hitlevels = {
   "6":8.5, "6_c":"NUUUUUUUCLEAR!!!!!!",
   "7":9.0, "7_c":"PLUTON EXPLOSION BOMB!!!!!!",
   "total":7,
-  "currentlevel":null,
-  "currentlevel_c":null,
-  "currentlevel_framecount":0,
-  "framecount_at_last_report":0,
-  "lookback":25,
-  "lastlevel":0,
-  "lastlevel_c":"no level"
+  "currentlevel":null, //for level number
+  "currentlevel_c":null, //for level label
+  "currentlevel_framecount":0, //for counting where we're at when level assigned
+  "lookback":25, //number of counts back that we want to evaluate the peak
+  "lastlevel":0, //previous level number
+  "lastlevel_c":"no level" //previous level label
 }
-var hitc = {
-  "hitcount":0,
-  "normal_routine":20000,
-  "mega_activity":100000
+var activity_tracker = {
+  "count":0, //count activity points
+  "warmup":20000, //points for a warmup routine
+  "mega":100000, //mega routine
 }
 
-var cWidth = 500;
-var cHeight = 500;
-var readoutboxLoc = 350;
+//Debugging & screen dimensions
+var cWidth;
+var cHeight;
+var readoutboxLoc = 350; //offset for debugging
 var outputbox;
 
 //[PRELOAD]
 function preload() {
 }
-//[SETUP]
 
+//[SETUP]
 function setup() {
   cWidth = windowWidth-readoutboxLoc;
   cHeight = windowHeight;
@@ -73,45 +74,114 @@ function setuproutine(){
   outputbox.style.left = windowWidth-readoutboxLoc+'px';
   outputbox.style.height = windowHeight-20+'px';
   outputbox.style.top = 0+'px';
-
-  //fonts
-
 }
+
 //[DRAW]
 function draw() {
   background(51);
-  ellipse(mouseX, mouseY, 5, 5);
   if (Object.getOwnPropertyNames(accelVals).length > 0){
-    //console.log(accelVals);
-    var xloc = map(accelVals.x, bounds.xmin, bounds.xmax, 0, cWidth);
-    var yloc = map(accelVals.y, bounds.ymin, bounds.ymax, 0, cHeight);
-    ellipse(xloc, yloc, 15, 15);
-    setbounds(accelVals);
-    //evaluateHit(accelVals);
-    trackHistory(accelVals);
-    graphVals();
-
+    setsensorbounds(accelVals); //set max and min vals for all sensor outputs
+    trackHistory(accelVals); //store sensor readings in global objects
+    showActivityProgress(); //show progress against activity goals
+    graphSensorVals(); //display sensor values
   } else {
     console.log('No vals yet from accelerometer');
   }
 }
 
+//show progress against activity goals
+function showActivityProgress(){
+  //PROGRESS BAR
+  stroke(255);
+  noFill();
+  rect(30, 50, cWidth-50, 20);
+  push();
+  fill(200);
+  var rectwidth = map(activity_tracker.count, 0, activity_tracker.warmup, 0, cWidth-50);
+  rect(30, 53, rectwidth, 15);
+  pop();
+
+  //LEVELS
+  //look back over previous "lookback" number of readings
+  //report the peak in that lookback period
+  var dup_array=[];
+  var len = allpreviousAccelVals.length-1;
+  for(var i = 0; i < hitlevels.lookback; i++){
+    if (allpreviousAccelVals[len-i] !== undefined){
+      dup_array[i] = allpreviousAccelVals[len-i]; //last lookback readings are now in here
+    }
+  }
+  var peakScore = arrMax(dup_array); //gets top val from lookback period
+  var level = getLevel(peakScore); //gets the level for the peak score over the past N readings
+  //console.log('level is:', level);
+
+  //MAIN MESSAGE
+  push();
+  textFont("Patua One");
+  fill(255, 255, 255);
+  textSize(32);
+  textAlign(CENTER)
+  text(level, cWidth/2, cHeight/4);
+  if (hitlevels.currentlevel != 0){
+    textSize(16);
+    var scoreFormatted = peakScore.toFixed(3) * 1000;
+    text(scoreFormatted, cWidth/2, cHeight/4+20);
+  }
+
+  //console.log(arrMax(dup_array))
+  //ACTIVITY POINTS
+  if (hitlevels.currentlevel >= 3){
+    var activityboost = 3 * hitlevels.currentlevel;
+    activity_tracker.count += activityboost;
+    //console.log(activity_tracker.count)
+    hitlevels.lastlevel_c = hitlevels.currentlevel_c;
+  }
+  textAlign(LEFT);
+  textFont("Arial");
+  textSize(18);
+  text('activity points:'+activity_tracker.count, 10, 18);
+  pop();
+}
+
+/*
+"currentlevel_framecount":0,
+"lookback":20,
+allpreviousAccelVals
+*/
+//GET LEVEL
+function getLevel(peakScore){
+  //loop through all levels, set current level to the highest matching level
+  for (var i = 0; i<=hitlevels.total; i++){
+    if ((peakScore >= hitlevels[i]) && (peakScore <= hitlevels[i+1])){
+        var copy=i+"_c";
+        hitlevels.currentlevel = i;
+        hitlevels.currentlevel_c = hitlevels[copy];
+        hitlevels.currentlevel_framecount = frameCount;
+        //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
+    }
+    //level has changed
+    if (hitlevels.lastlevel != hitlevels.currentlevel){
+      //console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
+      hitlevels.lastlevel = hitlevels.currentlevel;
+      //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
+    }
+  }
+  //DISPLAY LAST LEVEL
+  push();
+  textFont("Arial");
+  fill(255, 255, 255);
+  textAlign(LEFT);
+  textSize(18);
+  text('level achieved: '+hitlevels.lastlevel_c, 10, 40);
+  pop();
+  return (hitlevels.currentlevel_c)
+}
+
 //GRAPH VALS
 var heightDivisor = 1.3; //for line placement on graph
 var accelMaxReducer = .1; //for turning accel vals into a floating point val less than 1
-function graphVals(){
+function graphSensorVals(){
   //https://www.youtube.com/watch?v=jEwAMgcCgOA
-
-  stroke(255);
-  noFill();
-
-  //progress bar
-  rect(30, 50, cWidth-50, 40);
-  push();
-  fill(200);
-  var rectwidth = map(hitc.hitcount, 0, hitc.mega_activity, 0, cWidth-50);
-  rect(30, 55, rectwidth, 35);
-  pop();
 
   //Acceleration
   beginShape();
@@ -127,11 +197,11 @@ function graphVals(){
   //accelleration MAX indicator
   push();
   fill(255, 0, 0);
-  var y = map(bounds.accelerationmax*accelMaxReducer, 0, 1, height/heightDivisor, 0);
+  var y = map(sensorbounds.accelerationmax*accelMaxReducer, 0, 1, height/heightDivisor, 0);
   ellipse(cWidth-20,y,15,15);
   pop();
-  if (bounds.newaccelmax){
-    bounds.newaccelmax = false;
+  if (sensorbounds.newaccelmax){
+    sensorbounds.newaccelmax = false;
   }
 
   //X val
@@ -148,92 +218,9 @@ function graphVals(){
     allpreviousXVals.splice(0,1);
   }
   pop();
-
-  //LEVELS
-  //look back over previous "lookback" number of readings
-  //report the peak in that lookback period
-  var dup_array=[];
-  var len = allpreviousAccelVals.length-1;
-  for(var i = 0; i < hitlevels.lookback; i++){
-    if (allpreviousAccelVals[len-i] !== undefined){
-      dup_array[i] = allpreviousAccelVals[len-i]; //last lookback readings are now in here
-    }
-  }
-  var peakScore = arrMax(dup_array);
-  var level = getLevel(peakScore); //gets the level for the peak score over the past N readings
-
-  //console.log('level is:', level);
-  push();
-
-  //MAIN MESSAGE
-  textFont("Patua One");
-  fill(255, 255, 255);
-  textSize(32);
-  textAlign(CENTER)
-  text(level, cWidth/2, cHeight/4);
-  if (hitlevels.currentlevel != 0){
-    textSize(16);
-    var scoreFormatted = peakScore.toFixed(3) * 1000;
-    text(scoreFormatted, cWidth/2, cHeight/4+20);
-  }
-
-  //console.log(arrMax(dup_array))
-  //ACTIVITY POINTS
-  if (hitlevels.currentlevel >= 3){
-    var activityboost = 3 * hitlevels.currentlevel;
-    hitc.hitcount += activityboost;
-    //console.log(hitc.hitcount)
-    hitlevels.lastlevel_c = hitlevels.currentlevel_c;
-  }
-  textAlign(LEFT);
-  textFont("Arial");
-  textSize(18);
-  text('activity points:'+hitc.hitcount, 10, 18);
-  pop();
 } //end of graphVals
 
-//doesnt work b/c is currentlevel_framecount is always same
-function enoughDelay(){
-  var framediff = frameCount - hitlevels.currentlevel_framecount;
-  console.log(frameCount, hitlevels.currentlevel_framecount, framediff);
-  if (framediff > 50){
-    return (true);
-  }
-}
-/*
-"currentlevel_framecount":0,
-"framecount_at_last_report":0,
-"lookback":20,
-allpreviousAccelVals
-*/
-function getLevel(peakScore){
-  for (var i = 0; i<=hitlevels.total; i++){
-    if ((peakScore >= hitlevels[i]) && (peakScore <= hitlevels[i+1])){
-        var copy=i+"_c";
-        hitlevels.currentlevel = i;
-        hitlevels.currentlevel_c = hitlevels[copy];
-        hitlevels.currentlevel_framecount = frameCount;
-        //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
-    }
-    //level has changed
-    if (hitlevels.lastlevel != hitlevels.currentlevel){
-      console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
-      hitlevels.lastlevel = hitlevels.currentlevel;
-      //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
-    }
 
-  }
-
-  //LAST LEVEL
-  push();
-  textFont("Arial");
-  fill(255, 255, 255);
-  textAlign(LEFT);
-  textSize(18);
-  text('level achieved: '+hitlevels.lastlevel_c, 10, 40);
-  pop();
-  return (hitlevels.currentlevel_c)
-}
 
 //[EVALUATE HIT]
 /*
@@ -279,42 +266,44 @@ const arrMin = arr => Math.min(...arr);
 const arrSum = arr => arr.reduce((a,b) => a + b, 0)
 const arrAvg = arr => arr.reduce((a,b) => a + b, 0) / arr.length
 
-function setbounds(accelVals){
-  if (accelVals.x > bounds.xmax){bounds.xmax = accelVals.x;}
-  if (accelVals.x < bounds.xmin){bounds.xmin = accelVals.x;}
+//SET sensorbounds
+//set max and min vals for all sensor outputs
+function setsensorbounds(accelVals){
+  if (accelVals.x > sensorbounds.xmax){sensorbounds.xmax = accelVals.x;}
+  if (accelVals.x < sensorbounds.xmin){sensorbounds.xmin = accelVals.x;}
 
-  if (accelVals.y > bounds.ymax){bounds.ymax = accelVals.y;}
-  if (accelVals.y < bounds.ymin){bounds.ymin = accelVals.y;}
+  if (accelVals.y > sensorbounds.ymax){sensorbounds.ymax = accelVals.y;}
+  if (accelVals.y < sensorbounds.ymin){sensorbounds.ymin = accelVals.y;}
 
-  if (accelVals.z > bounds.zmax){bounds.zmax = accelVals.z;}
-  if (accelVals.z < bounds.zmin){bounds.zmin = accelVals.z;}
+  if (accelVals.z > sensorbounds.zmax){sensorbounds.zmax = accelVals.z;}
+  if (accelVals.z < sensorbounds.zmin){sensorbounds.zmin = accelVals.z;}
 
-  if (accelVals.pitch > bounds.pitchmax){bounds.pitchmax = accelVals.pitch;}
-  if (accelVals.pitch < bounds.pitchmin){bounds.pitchmin = accelVals.pitch;}
+  if (accelVals.pitch > sensorbounds.pitchmax){sensorbounds.pitchmax = accelVals.pitch;}
+  if (accelVals.pitch < sensorbounds.pitchmin){sensorbounds.pitchmin = accelVals.pitch;}
 
-  if (accelVals.roll > bounds.rollmax){bounds.rollmax = accelVals.roll;}
-  if (accelVals.roll < bounds.rollmin){bounds.rollmin = accelVals.roll;}
+  if (accelVals.roll > sensorbounds.rollmax){sensorbounds.rollmax = accelVals.roll;}
+  if (accelVals.roll < sensorbounds.rollmin){sensorbounds.rollmin = accelVals.roll;}
 
-  if (accelVals.acceleration > bounds.accelerationmax){
-    bounds.accelerationmax = accelVals.acceleration;
-    bounds.newaccelmax = true;
+  if (accelVals.acceleration > sensorbounds.accelerationmax){
+    sensorbounds.accelerationmax = accelVals.acceleration;
+    sensorbounds.newaccelmax = true;
   } else {
-    bounds.newaccelmax = false;
+    sensorbounds.newaccelmax = false;
   }
 
-  if (accelVals.acceleration < bounds.accelerationmin){bounds.accelerationmin = accelVals.acceleration;}
+  if (accelVals.acceleration < sensorbounds.accelerationmin){sensorbounds.accelerationmin = accelVals.acceleration;}
 
-  if (accelVals.inclination > bounds.inclinationmax){bounds.inclinationmax = accelVals.inclination;}
-  if (accelVals.inclination < bounds.inclinationmin){bounds.inclinationmin = accelVals.inclination;}
+  if (accelVals.inclination > sensorbounds.inclinationmax){sensorbounds.inclinationmax = accelVals.inclination;}
+  if (accelVals.inclination < sensorbounds.inclinationmin){sensorbounds.inclinationmin = accelVals.inclination;}
 
-  if (accelVals.orientation > bounds.orientationmax){bounds.orientationmax = accelVals.orientation;}
-  if (accelVals.orientation < bounds.orientationmin){bounds.orientationmin = accelVals.orientation;}
+  if (accelVals.orientation > sensorbounds.orientationmax){sensorbounds.orientationmax = accelVals.orientation;}
+  if (accelVals.orientation < sensorbounds.orientationmin){sensorbounds.orientationmin = accelVals.orientation;}
 
   var output = '';
   output= "<br>------max & min readings-------<br>";
   output += '<table>';
-  for (var property in bounds) {
-    output += "<tr><td>" + property + "</td><td>" + bounds[property] + "</td></tr>";
+  for (var property in sensorbounds) {
+    output += "<tr><td>" + property + "</td><td>" + sensorbounds[property] + "</td></tr>";
   }
   output += "</table>";
   output += "<br>------live readings-------<br>";
@@ -333,7 +322,3 @@ function windowResized() {
   setuproutine()
   resizeCanvas(windowWidth, windowHeight);
 }
-
-Array.prototype.clone = function() {
-	return this.slice(0);
-};
