@@ -157,6 +157,7 @@ function showActivityProgress(){
   textFont("Arial");
   textSize(18);
   text('activity points:'+activity_tracker.count, 30, 45);
+  text('working on:'+activity_tracker[activity_tracker.current_activity+"_c"], 200, 45);
   pop();
 }
 
