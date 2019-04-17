@@ -46,8 +46,11 @@ var hitlevels = {
 }
 var activity_tracker = {
   "count":0, //count activity points
-  "warmup":20000, //points for a warmup routine
-  "mega":100000, //mega routine
+  "0":1000, //points for a warmup routine
+  "0_c": "warm up",
+  "1": 100000,
+  "1_c": "mega", //mega routine
+  "current_activity": 0
 }
 
 //Debugging & screen dimensions
@@ -92,14 +95,28 @@ function draw() {
 //show progress against activity goals
 function showActivityProgress(){
   //PROGRESS BAR
-  stroke(255);
-  noFill();
-  rect(30, 50, cWidth-50, 20);
-  push();
-  fill(200);
-  var rectwidth = map(activity_tracker.count, 0, activity_tracker.warmup, 0, cWidth-50);
-  rect(30, 53, rectwidth, 15);
-  pop();
+  var progBarH = 15;
+  var progBarW = cWidth-50;
+  var innerBarWidth = map(activity_tracker.count, 0, activity_tracker[activity_tracker.current_activity], 0, cWidth-50);
+  if (innerBarWidth > progBarW){
+    console.log('you did it!');
+    push();
+    textFont("Patua One");
+    fill('yellow');
+    textSize(50);
+    textAlign(CENTER)
+    text("You did it!", cWidth/2, cHeight/6);
+    pop();
+  } else {
+    stroke(255);
+    noFill();
+    rect(30, 50, progBarW, progBarH);
+    push();
+    fill(200);
+    rect(30, 50, innerBarWidth, progBarH);
+    pop();
+  }
+
 
   //LEVELS
   //look back over previous "lookback" number of readings
@@ -139,7 +156,7 @@ function showActivityProgress(){
   textAlign(LEFT);
   textFont("Arial");
   textSize(18);
-  text('activity points:'+activity_tracker.count, 10, 18);
+  text('activity points:'+activity_tracker.count, 30, 45);
   pop();
 }
 
@@ -167,13 +184,14 @@ function getLevel(peakScore){
     }
   }
   //DISPLAY LAST LEVEL
-  push();
-  textFont("Arial");
-  fill(255, 255, 255);
-  textAlign(LEFT);
-  textSize(18);
-  text('level achieved: '+hitlevels.lastlevel_c, 10, 40);
-  pop();
+  // push();
+  // textFont("Arial");
+  // fill(255, 255, 255);
+  // textAlign(LEFT);
+  // textSize(18);
+  // text('level achieved: '+hitlevels.lastlevel_c, 10, 40);
+  // pop();
+
   return (hitlevels.currentlevel_c)
 }
 
