@@ -109,7 +109,7 @@ function graphVals(){
   rect(30, 50, cWidth-50, 40);
   push();
   fill(200);
-  var rectwidth = map(hitc.hitcount, 0, hitc.normal_routine, 0, cWidth-50);
+  var rectwidth = map(hitc.hitcount, 0, hitc.mega_activity, 0, cWidth-50);
   rect(30, 55, rectwidth, 35);
   pop();
 
