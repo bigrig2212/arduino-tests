@@ -53,7 +53,16 @@ var activity_tracker = {
   "1_c": "mega", //mega routine
   "2": 200000,
   "2_c": "ultra", //mega routine
-  "current_activity": 1
+  "current_activity": 0,
+  "total_activities": 3
+}
+var scenemanager = {
+  "current_scene" : 0,
+  "last_scene" : 0,
+  "scene_0":"loading",
+  "scene_1":"activity_select",
+  "scene_2":"activity_do",
+  "activity_selected":false
 }
 
 //Debugging & screen dimensions
@@ -61,20 +70,21 @@ var cWidth;
 var cHeight;
 var readoutboxLoc = 350; //offset for debugging
 var outputbox;
+var speechRec;
+var myVoice;
 
 //[PRELOAD]
 var myVoice;
 function preload() {
+  //text to speech
   myVoice = new p5.Speech();
+  myVoice.onLoad = voiceReady;
+  //speech to text
   lang = navigator.language || 'en-US';
-  let speechRec = new p5.SpeechRec(lang, gotSpeech);
+  speechRec = new p5.SpeechRec(lang, gotSpeech);
   let continuous = true;
   let interim = false;
   speechRec.start(continuous, interim);
-  function gotSpeech(){
-    //console.log(speechRec);
-    console.log(speechRec.resultString);
-  }
 }
 
 //[SETUP]
@@ -83,10 +93,8 @@ function setup() {
   cHeight = windowHeight;
   createCanvas(cWidth,windowHeight);
   setuproutine();
-
 }
 function setuproutine(){
-  //myVoice.speak('WELCOME TO MASSIVE HIT!!!');
   //move the output box into position
   outputbox = document.getElementById('boundtext');
   outputbox.style.position = "absolute";
@@ -98,16 +106,70 @@ function setuproutine(){
 //[DRAW]
 function draw() {
   background(51);
-  if (Object.getOwnPropertyNames(accelVals).length > 0){
+  if (scenemanager.activity_selected == true){
+    current_scene = 2;
+  } else if (voiceisready && (Object.getOwnPropertyNames(accelVals).length > 0)){
+    current_scene = 1;
+  } else {
+    current_scene = 0;
+  }
+  showCurrentScene();
+}
+
+//[SCENE MANAGER]
+function showCurrentScene(){
+  if (current_scene == 0){
+    showLoadingMsg();
+    console.log('No vals yet from accelerometer');
+  } else if (current_scene == 1){
+    showActivitySelect();
+  } else if (current_scene == 2){
     setsensorbounds(accelVals); //set max and min vals for all sensor outputs
     trackHistory(accelVals); //store sensor readings in global objects
     showActivityProgress(); //show progress against activity goals
     graphSensorVals(); //display sensor values
-  } else {
-    console.log('No vals yet from accelerometer');
+    displayLastSaid(); //show last spech rec
   }
 }
+let activityMenuAnnounced = false;
+function showActivitySelect(){
+  push();
+  textFont("Patua One");
+  fill('yellow');
+  textSize(30);
+  textAlign(CENTER);
+  var activityWelcome = "Which activity do you want?";
+  if (activityMenuAnnounced === false){
+    saySomething(activityWelcome);
+    activityMenuAnnounced = true;
+  }
+  text(activityWelcome, cWidth/2, cHeight/4);
+  var activityList = "";
+  for (var i=0; i<activity_tracker.total_activities; i++){
+    activityList += activity_tracker[i+"_c"];
+    if (i != activity_tracker.total_activities-1){
+      activityList += ", ";
+    }
+  }
+  text(activityList, cWidth/2, cHeight/4+40);
+  pop();
+}
 
+function showLoadingMsg(){
+  push();
+  textFont("Patua One");
+  fill('yellow');
+  textSize(30);
+  textAlign(LEFT);
+  var randomnum = getRandomInt(3);
+  var loadingmsg = "Loading";
+  if (randomnum == 0){loadingmsg = loadingmsg + "."}
+  if (randomnum == 1){loadingmsg = loadingmsg + ".."}
+  if (randomnum == 2){loadingmsg = loadingmsg + "..."}
+  console.log(loadingmsg,randomnum)
+  text(loadingmsg, cWidth/2, cHeight/6);
+  pop();
+}
 //show progress against activity goals
 function showActivityProgress(){
   //PROGRESS BAR
@@ -169,9 +231,9 @@ function showActivityProgress(){
     var activityboost = 3 * hitlevels.currentlevel;
     activity_tracker.count += activityboost;
     //console.log(activity_tracker.count)
-    hitlevels.lastlevel_c = hitlevels.currentlevel_c;
   }
-
+  hitlevels.lastlevel = hitlevels.currentlevel;
+  hitlevels.lastlevel_c = hitlevels.currentlevel_c;
 
   textAlign(LEFT);
   textFont("Arial");
@@ -200,18 +262,11 @@ function getLevel(peakScore){
         hitlevels.currentlevel_framecount = frameCount;
         //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
     }
-    //level has changed
-    //console.log(hitlevels.lastlevel, hitlevels.currentlevel, hitlevels.level_same_counter)
-    if (parseInt(hitlevels.lastlevel) == parseInt(hitlevels.currentlevel)){
-      //hitlevels.level_same_counter++;
-      //console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
-      //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
-    }
-    if (parseInt(hitlevels.level_same_counter) < 3){
-      //speakLevel(hitlevels.currentlevel_c);
-    }
-
   }
+  if (hitlevels.currentlevel_c != hitlevels.lastlevel_c){
+    saySomething(hitlevels.currentlevel_c);
+  }
+
   //DISPLAY LAST LEVEL
   // push();
   // textFont("Arial");
@@ -363,9 +418,75 @@ function setsensorbounds(accelVals){
   outputbox.innerHTML = output;
 }
 
+//[SPEECH]
+//voice to text callback
+let lastSaid = "";
+function gotSpeech(){
+  console.log(speechRec);
+  console.log(speechRec.resultString);
+  lastSaid = speechRec.resultString;
+
+  var lastSaidLower = lastSaid.toLowerCase();
+  if (lastSaidLower == "warm up"){
+    saySomething("Warm up selected!");
+    activity_tracker.current_activity = 0;
+    scenemanager.activity_selected  = true;
+    scenemanager.current_scene = 2;
+  } else if (lastSaidLower == "mega"){
+    saySomething("Mega selected!");
+    activity_tracker.current_activity = 1;
+    scenemanager.activity_selected  = true;
+    scenemanager.current_scene = 2;
+  } else if (lastSaidLower == "ultra"){
+    saySomething("Ultra selected!");
+    activity_tracker.current_activity = 2;
+    scenemanager.current_scene = 2;
+    scenemanager.activity_selected  = true;
+  }
+}
+
+function displayLastSaid(){
+  if (lastSaid != ""){
+    push();
+    fill(255);
+    textAlign(LEFT);
+    textFont("Arial");
+    textSize(18);
+    text('you said: '+lastSaid, 400, 45);
+    pop();
+  }
+}
+//on voice ready
+let voiceisready = false;
+function voiceReady(){
+  //console.log(myVoice.voices)
+  voiceisready = true;
+  setVoice();
+}
+function mousePressed(){ //just for fun
+  let thisvoice = setVoice();
+  saySomething('MASSIVE HIT!!!');
+  console.log(thisvoice.name, thisvoice.lang)
+}
+function setVoice(){
+  let voices = myVoice.voices;
+  let voice = random(voices);
+  myVoice.setVoice(voice.name);
+  return (voice)
+}
+function saySomething(mysaying){
+  console.log('saySomething:', mysaying)
+  myVoice.speak(mysaying);
+}
+
+//[RESIZE]
 function windowResized() {
   cWidth = windowWidth-readoutboxLoc;
   cHeight = windowHeight;
   setuproutine()
   resizeCanvas(windowWidth, windowHeight);
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
 }
