@@ -66,6 +66,15 @@ var outputbox;
 var myVoice;
 function preload() {
   myVoice = new p5.Speech();
+  lang = navigator.language || 'en-US';
+  let speechRec = new p5.SpeechRec(lang, gotSpeech);
+  let continuous = true;
+  let interim = false;
+  speechRec.start(continuous, interim);
+  function gotSpeech(){
+    //console.log(speechRec);
+    console.log(speechRec.resultString);
+  }
 }
 
 //[SETUP]
@@ -77,7 +86,7 @@ function setup() {
 
 }
 function setuproutine(){
-  myVoice.speak('WELCOME TO MASSIVE HIT!!!');
+  //myVoice.speak('WELCOME TO MASSIVE HIT!!!');
   //move the output box into position
   outputbox = document.getElementById('boundtext');
   outputbox.style.position = "absolute";
@@ -192,15 +201,14 @@ function getLevel(peakScore){
         //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
     }
     //level has changed
-    console.log(hitlevels.lastlevel, hitlevels.currentlevel, hitlevels.level_same_counter)
+    //console.log(hitlevels.lastlevel, hitlevels.currentlevel, hitlevels.level_same_counter)
     if (parseInt(hitlevels.lastlevel) == parseInt(hitlevels.currentlevel)){
       //hitlevels.level_same_counter++;
       //console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
       //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
     }
-
     if (parseInt(hitlevels.level_same_counter) < 3){
-      speakLevel(hitlevels.currentlevel_c);
+      //speakLevel(hitlevels.currentlevel_c);
     }
 
   }
