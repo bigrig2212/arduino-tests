@@ -6,7 +6,7 @@ const socketio = require('socket.io');
 var THREE = require('three');
 
 var five = require("johnny-five");
-var board = new five.Board();
+var board = new five.Board({port: "/dev/tty.usbmodem1421"});
 
 const app = express();
 const server = http.createServer(app);
@@ -72,15 +72,16 @@ io.on('connection', (socket) => {
 
 // [ACCELEROMETER]
 board.on("ready", function() {
-  console.log('Starting up:')
+  console.log('Starting up: board is ready.')
   var accelerometer = new five.Accelerometer({
     controller: "ADXL335",
     pins: ["A0", "A1", "A2"]
   });
 
   accelerometer.on("change", function() {
-    emitAccelVals({"x":this.x, "y":this.y, "z":this.z, "pitch":this.pitch, "roll":this.roll, "acceleration":this.acceleration, "inclination":this.inclination, "orientation":this.orientation});
-    // console.log("accelerometer");
+    if (emitAccelVals != undefined){
+      emitAccelVals({"x":this.x, "y":this.y, "z":this.z, "pitch":this.pitch, "roll":this.roll, "acceleration":this.acceleration, "inclination":this.inclination, "orientation":this.orientation});
+    }// console.log("accelerometer");
     //console.log("  x            : ", this.x);
     // console.log("  y            : ", this.y);
     // console.log("  z            : ", this.z);
