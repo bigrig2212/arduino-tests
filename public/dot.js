@@ -42,15 +42,18 @@ var hitlevels = {
   "currentlevel_framecount":0, //for counting where we're at when level assigned
   "lookback":25, //number of counts back that we want to evaluate the peak
   "lastlevel":0, //previous level number
-  "lastlevel_c":"no level" //previous level label
+  "lastlevel_c":"no level", //previous level label
+  "level_same_counter": 0 //number of times same level achieved
 }
 var activity_tracker = {
   "count":0, //count activity points
-  "0":1000, //points for a warmup routine
+  "0":10000, //points for a warmup routine
   "0_c": "warm up",
   "1": 100000,
   "1_c": "mega", //mega routine
-  "current_activity": 0
+  "2": 200000,
+  "2_c": "ultra", //mega routine
+  "current_activity": 1
 }
 
 //Debugging & screen dimensions
@@ -60,7 +63,9 @@ var readoutboxLoc = 350; //offset for debugging
 var outputbox;
 
 //[PRELOAD]
+var myVoice;
 function preload() {
+  myVoice = new p5.Speech();
 }
 
 //[SETUP]
@@ -69,8 +74,10 @@ function setup() {
   cHeight = windowHeight;
   createCanvas(cWidth,windowHeight);
   setuproutine();
+
 }
 function setuproutine(){
+  myVoice.speak('WELCOME TO MASSIVE HIT!!!');
   //move the output box into position
   outputbox = document.getElementById('boundtext');
   outputbox.style.position = "absolute";
@@ -104,8 +111,10 @@ function showActivityProgress(){
     textFont("Patua One");
     fill('yellow');
     textSize(50);
-    textAlign(CENTER)
-    text("You did it!", cWidth/2, cHeight/6);
+    textAlign(CENTER);
+    var congratstext = "You did it!";
+    text(congratstext, cWidth/2, cHeight/6);
+    myVoice.speak(congratstext);
     pop();
   } else {
     stroke(255);
@@ -153,6 +162,8 @@ function showActivityProgress(){
     //console.log(activity_tracker.count)
     hitlevels.lastlevel_c = hitlevels.currentlevel_c;
   }
+
+
   textAlign(LEFT);
   textFont("Arial");
   textSize(18);
@@ -161,6 +172,9 @@ function showActivityProgress(){
   pop();
 }
 
+function speakLevel(level){
+  myVoice.speak(level);
+}
 /*
 "currentlevel_framecount":0,
 "lookback":20,
@@ -178,11 +192,17 @@ function getLevel(peakScore){
         //console.log(frameCount, accelVals.acceleration, hitlevels[copy]);
     }
     //level has changed
-    if (hitlevels.lastlevel != hitlevels.currentlevel){
+    console.log(hitlevels.lastlevel, hitlevels.currentlevel, hitlevels.level_same_counter)
+    if (parseInt(hitlevels.lastlevel) == parseInt(hitlevels.currentlevel)){
+      //hitlevels.level_same_counter++;
       //console.log("LEVEL CHANGED",frameCount, accelVals.acceleration, hitlevels[copy]);
-      hitlevels.lastlevel = hitlevels.currentlevel;
       //hitlevels.lastlevel_c = hitlevels.currentlevel_c;
     }
+
+    if (parseInt(hitlevels.level_same_counter) < 3){
+      speakLevel(hitlevels.currentlevel_c);
+    }
+
   }
   //DISPLAY LAST LEVEL
   // push();
